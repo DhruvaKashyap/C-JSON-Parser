@@ -16,7 +16,8 @@ struct list
     struct node *head;
 };
 
-union vals {
+union vals
+{
     int num;
     char *str;
     struct list *lhead;
@@ -42,6 +43,10 @@ typedef union vals VAL_t;
 typedef struct kv KV_t;
 typedef struct JSON JSON_t;
 
+JSON_t *init_json();
+void free_json(JSON_t *j);
+KV_t *init_KV(char* key,void* value,int type);
+void free_KV(KV_t *kv);
 void display_JSON(JSON_t *j);
-void insert(JSON_t *j, char *key, void *val);
+void insert(JSON_t *j, char *key, void *val, int val_type);
 #endif
