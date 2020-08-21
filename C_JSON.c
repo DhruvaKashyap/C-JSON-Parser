@@ -48,36 +48,34 @@ void free_KV(KV_t *kv)
     kv = NULL;
 }
 
-void display_JSON(JSON_t *j)
+void _display_JSON(JSON_t *j)
 {
     if (j != NULL)
     {
         if (j->head != NULL)
         {
             KV_t *kv = j->head;
-            printf("{\n");
+            printf("{");
             while (kv != NULL)
             {
                 printf("%s:", kv->key);
                 if (kv->v_type == INT_V)
-                    printf("%d\n", (int)kv->value);
+                    printf("%d", (int)kv->value);
                 if (kv->v_type == CHAR_V)
-                    printf("%s\n", (char *)kv->value);
+                    printf("%s", (char *)kv->value);
                 if (kv->v_type == LIST_V)
                 {
-                    printf("\n\n");
                     print_list((LIST_t *)kv->value);
-                    printf("\n\n");
                 }
                 if (kv->v_type == JSON_V)
                 {
-                    printf("\n\n");
-                    display_JSON((JSON_t *)kv->value);
-                    printf("\n");
+                    _display_JSON((JSON_t *)kv->value);
                 }
+                if(kv->next!=NULL)
+                    printf(",");
                 kv = kv->next;
             }
-            printf("}\n");
+            printf("}");
         }
     }
 }
@@ -131,17 +129,14 @@ void print_list(LIST_t *l)
                     printf("%s", (char *)n->d);
                 if (l->ltype == LIST_V)
                 {
-                    printf("\n\n");
                     print_list((LIST_t *)n->d);
-                    printf("\n\n");
                 }
                 if (l->ltype == JSON_V)
                 {
-                    printf("\n\n");
-                    display_JSON((JSON_t *)n->d);
-                    printf("\n");
+                    _display_JSON((JSON_t *)n->d);
                 }
-                printf(",");
+                if(n->next!=NULL)
+                    printf(",");
                 n = n->next;
             }
             printf("]");
@@ -179,4 +174,10 @@ void freelist(LIST_t *l)
     }
     free(l);
     l = NULL;
+}
+
+void display(JSON_t *j)
+{
+    _display_JSON(j);
+    printf("\n");
 }

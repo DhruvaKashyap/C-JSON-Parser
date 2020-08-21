@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 	l = init_list(JSON_V);
 	linsert(l, json);
 	insert(json2, "list", l, LIST_V);
-	display_JSON(json2);
+	display(json2);
 	free_json(json);
 	freelist(l);
 	free_json(json2);
