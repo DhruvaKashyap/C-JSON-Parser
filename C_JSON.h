@@ -7,13 +7,14 @@
 
 struct node
 {
-    int d;
+    void* d;
     struct node *next;
 };
 
 struct list
 {
     struct node *head;
+    int ltype;
 };
 
 union vals
@@ -45,8 +46,13 @@ typedef struct JSON JSON_t;
 
 JSON_t *init_json();
 void free_json(JSON_t *j);
-KV_t *init_KV(char* key,void* value,int type);
+KV_t *init_KV(char *key, void *value, int type);
 void free_KV(KV_t *kv);
 void display_JSON(JSON_t *j);
 void insert(JSON_t *j, char *key, void *val, int val_type);
+node_t *cnode(void *val);
+LIST_t* init_list(int val_type);
+void print_list(LIST_t *l);
+void linsert(LIST_t *l, void *val);
+void freelist(LIST_t *l);
 #endif
