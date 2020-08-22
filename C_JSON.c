@@ -32,8 +32,7 @@ KV_t *init_KV(char *key, void *value, int type)
     KV_t *kv;
     kv = (KV_t *)malloc(sizeof(KV_t));
     kv->key = (char *)malloc(sizeof(key));
-    for (int i = 0; key[i] != '\0'; ++i)
-        kv->key[i] = key[i];
+    strcpy(kv->key, key);
     kv->value = value;
     kv->v_type = type;
     kv->next = NULL;
@@ -59,19 +58,7 @@ void _display_JSON(JSON_t *j)
             printf("{");
             while (kv != NULL)
             {
-                printf("%s:", kv->key);
-                if (kv->v_type == INT_V)
-                    printf("%d", (int)kv->value);
-                if (kv->v_type == CHAR_V)
-                    printf("%s", (char *)kv->value);
-                if (kv->v_type == LIST_V)
-                {
-                    print_list((LIST_t *)kv->value);
-                }
-                if (kv->v_type == JSON_V)
-                {
-                    _display_JSON((JSON_t *)kv->value);
-                }
+                print_KV(kv);
                 if (kv->next != NULL)
                     printf(",");
                 kv = kv->next;
@@ -200,4 +187,114 @@ KV_t *get(JSON_t *j, char *key)
     if (n != NULL)
         return n;
     return NULL;
+}
+
+void print_KV(KV_t *kv)
+{
+    if (kv != NULL)
+    {
+        printf("%s:", kv->key);
+        if (kv->v_type == NULL_V)
+            printf("NULL");
+        if (kv->v_type == INT_V)
+            printf("%d", (int)kv->value);
+        if (kv->v_type == CHAR_V)
+            printf("%s", (char *)kv->value);
+        if (kv->v_type == LIST_V)
+        {
+            print_list((LIST_t *)kv->value);
+        }
+        if (kv->v_type == JSON_V)
+        {
+            _display_JSON((JSON_t *)kv->value);
+        }
+    }
+}
+
+JSON_t *parse()
+{
+    char c;
+    int instr = 0;
+    JSON_t *j = init_json();
+    while ((c = getchar()) != '\n')
+    {
+        if (c == '\n' || c == '\t' || (instr == 0 && c == ' '))
+        {
+            ;
+        }
+        else if (c == '"')
+        {
+            instr = !instr;
+        }
+        else if (c == '{' || c == ',')
+        {
+            ;
+        }
+        else if (c == '}')
+        {
+            break;
+        }
+        else
+        {
+            char key[100];
+            void *val;
+            int i = 0;
+            int typ;
+            while (c != '"')
+            {
+                key[i++] = c;
+                c = getchar();
+            }
+            key[i] = '\0';
+            c = getchar(); //:
+            if (c == ':')
+            {
+                c = getchar(); //signifies type
+                if (c == ',')
+                {
+                    typ = NULL_V;
+                    val = NULL;
+                }
+                else if (c <= '9' && c >= '0')
+                {
+                    typ = INT_V;
+                    int num = c - '0';
+                    c = getchar();
+                    while (c != ',' && c != '}')
+                    {
+                        num = num * 10 + (c - '0');
+                        c = getchar();
+                    }
+                    val = (void *)num;
+                }
+                else if (c == '"')
+                {
+                    typ = CHAR_V;
+                    val = (char *)malloc(sizeof(char) * 100);
+                    c = getchar();
+                    i = 0;
+                    while (c != '"')
+                    {
+                        ((char *)val)[i++] = c;
+                        c = getchar();
+                    }
+                }
+                else if (c == '[')
+                {
+                    typ = LIST_V;
+                }
+                else if (c == '{')
+                {
+                    typ = JSON_V;
+                    val = parse();
+                }
+                else
+                {
+                    break;
+                }
+                insert(j, key, val, typ);
+            }
+        }
+    }
+    return j;
 }
