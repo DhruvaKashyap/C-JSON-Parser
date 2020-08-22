@@ -14,6 +14,7 @@ struct node
 struct list
 {
     struct node *head;
+    struct node *tail;
     int ltype;
 };
 
@@ -36,6 +37,7 @@ struct kv
 struct JSON
 {
     struct kv *head;
+    struct kv *tail;
 };
 
 typedef struct node node_t;
@@ -54,6 +56,8 @@ void insert(JSON_t *j, char *key, void *val, int val_type);
 node_t *cnode(void *val);
 LIST_t* init_list(int val_type);
 void print_list(LIST_t *l);
+void _print_list(LIST_t *l);
 void linsert(LIST_t *l, void *val);
 void freelist(LIST_t *l);
+KV_t* get(JSON_t* j,char* key);
 #endif

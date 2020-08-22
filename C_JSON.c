@@ -1,6 +1,7 @@
 #include "C_JSON.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 JSON_t *init_json()
 {
@@ -71,7 +72,7 @@ void _display_JSON(JSON_t *j)
                 {
                     _display_JSON((JSON_t *)kv->value);
                 }
-                if(kv->next!=NULL)
+                if (kv->next != NULL)
                     printf(",");
                 kv = kv->next;
             }
@@ -86,13 +87,13 @@ void insert(JSON_t *j, char *key, void *val, int val_type)
     {
         if (j->head == NULL)
         {
-            j->head = init_KV(key, val, val_type);
+            j->head = j->tail = init_KV(key, val, val_type);
         }
         else
         {
-            KV_t *n = j->head;
-            j->head = init_KV(key, val, val_type);
-            j->head->next = n;
+            KV_t *n = j->tail;
+            j->tail = init_KV(key, val, val_type);
+            n->next = j->tail;
         }
     }
 }
@@ -113,7 +114,7 @@ LIST_t *init_list(int val_type)
     return l;
 }
 
-void print_list(LIST_t *l)
+void _print_list(LIST_t *l)
 {
     if (l != NULL)
     {
@@ -135,7 +136,7 @@ void print_list(LIST_t *l)
                 {
                     _display_JSON((JSON_t *)n->d);
                 }
-                if(n->next!=NULL)
+                if (n->next != NULL)
                     printf(",");
                 n = n->next;
             }
@@ -143,19 +144,26 @@ void print_list(LIST_t *l)
         }
     }
 }
+
+void print_list(LIST_t *l)
+{
+    _print_list(l);
+    printf("\n");
+}
+
 void linsert(LIST_t *l, void *v)
 {
     if (l != NULL)
     {
         if (l->head == NULL)
         {
-            l->head = cnode(v);
+            l->head = l->tail = cnode(v);
         }
         else
         {
-            node_t *n = l->head;
-            l->head = cnode(v);
-            l->head->next = n;
+            node_t *n = l->tail;
+            l->tail = cnode(v);
+            n->next = l->tail;
         }
     }
 }
@@ -180,4 +188,16 @@ void display(JSON_t *j)
 {
     _display_JSON(j);
     printf("\n");
+}
+
+KV_t *get(JSON_t *j, char *key)
+{
+    KV_t *n = j->head;
+    while (strcmp(n->key, key))
+    {
+        n = n->next;
+    }
+    if (n != NULL)
+        return n;
+    return NULL;
 }
