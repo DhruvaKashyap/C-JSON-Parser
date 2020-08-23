@@ -113,7 +113,7 @@ void _print_list(LIST_t *l)
             while (n != NULL)
             {
                 if (l->ltype == NULL_V)
-                    printf("NULL");
+                    printf("null");
                 if (l->ltype == INT_V)
                     printf("%d", (int)n->d);
                 if (l->ltype == CHAR_V)
@@ -198,7 +198,7 @@ void print_KV(KV_t *kv)
     {
         printf("\"%s\":", kv->key);
         if (kv->v_type == NULL_V)
-            printf("NULL");
+            printf("null");
         if (kv->v_type == INT_V)
             printf("%d", (int)kv->value);
         if (kv->v_type == CHAR_V)
@@ -301,8 +301,8 @@ JSON_t *json_parse(FILE *fp)
     JSON_t *j = init_json();
     while ((c = fgetc(fp)) != EOF)
     {
-        // printf("%c\n",c);
-        if (c == '\n' || c == '\t' || (instr == 0 && c == ' '))
+        // printf("%c\n", c);
+        if (c == '\n' || c == '\t' || c == ' ')
         {
             ;
         }
@@ -352,12 +352,12 @@ JSON_t *json_parse(FILE *fp)
                     typ = INT_V;
                     int num = c - '0';
                     c = fgetc(fp);
-                    while (c != ',' && c != '}')
+                    while (c != ',' && c != '}' && c != '\n')
                     {
                         // printf("%c",c);
                         if (c > '9' || c < '0')
                         {
-                            printf("1.PARSE ERROR!!\n");
+                            printf(":%c:,1.PARSE ERROR!!\n", c);
                             free_json(j);
                             return NULL;
                         }
@@ -383,18 +383,28 @@ JSON_t *json_parse(FILE *fp)
                     typ = LIST_V;
                     ungetc('[', fp);
                     val = list_parse(fp);
+                    c = fgetc(fp);
                 }
                 else if (tp == '{')
                 {
                     typ = JSON_V;
                     ungetc('{', fp);
                     val = json_parse(fp);
+                    c = fgetc(fp);
                 }
                 else
                 {
-                    printf("\n:%c: 2.PARSE ERROR!!\n", c);
-                    free_json(j);
-                    return NULL;
+                    if (c == 'n' && ((c = fgetc(fp)) == 'u') && ((c = fgetc(fp)) == 'l') && ((c = fgetc(fp)) == 'l'))
+                    {
+                        typ=NULL_V;
+                        val = NULL;
+                    }
+                    else
+                    {
+                        printf("\n:%c: 2.PARSE ERROR!!\n", tp);
+                        free_json(j);
+                        return NULL;
+                    }
                 }
                 insert(j, key, val, typ);
             }
