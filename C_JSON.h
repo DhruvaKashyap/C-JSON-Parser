@@ -6,9 +6,11 @@
 #define LIST_V 3
 #define JSON_V 4
 
+#include <stdio.h>
+
 struct node
 {
-    void* d;
+    void *d;
     struct node *next;
 };
 
@@ -57,15 +59,15 @@ JSON_t *init_json();
 void _display_JSON(JSON_t *j);
 void display(JSON_t *j);
 void insert(JSON_t *j, char *key, void *val, int val_type);
-KV_t* get(JSON_t* j,char* key);
-JSON_t* parse();
+KV_t *get(JSON_t *j, char *key);
+JSON_t *json_parse(FILE *fp);
 void free_json(JSON_t *j);
 
-
-LIST_t* init_list(int val_type);
+LIST_t *init_list(int val_type);
 void print_list(LIST_t *l);
 void _print_list(LIST_t *l);
 void linsert(LIST_t *l, void *val);
+LIST_t *list_parse(FILE *fp);
 void freelist(LIST_t *l);
 
 #endif

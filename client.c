@@ -4,8 +4,22 @@
 int main(int argc, char *argv[])
 {
 	JSON_t *json;
-	json=parse();
+	FILE* fp=fopen("a.json","r");
+	json = json_parse(fp);
 	display(json);
+// LIST_t* l;
+// l=list_parse(fp);
+printf("\n\n");
+
+// print_list(l);
+// int c=0;
+// node_t *n=l->head;
+// while(n!=NULL)
+// {
+// 	c++;
+// 	n=n->next;
+// }
+// printf("count:%d\n",c);
 	// JSON_t *json2;
 	// json = init_json();
 	// json2 = init_json();

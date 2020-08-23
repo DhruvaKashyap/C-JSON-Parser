@@ -1,8 +1,7 @@
 #include "C_JSON.h"
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#define STR_MAX 1000
 JSON_t *init_json()
 {
     JSON_t *j = (JSON_t *)malloc(sizeof(JSON_t));
@@ -50,12 +49,13 @@ void free_KV(KV_t *kv)
 
 void _display_JSON(JSON_t *j)
 {
+    printf("{");
     if (j != NULL)
     {
         if (j->head != NULL)
         {
             KV_t *kv = j->head;
-            printf("{");
+
             while (kv != NULL)
             {
                 print_KV(kv);
@@ -63,9 +63,9 @@ void _display_JSON(JSON_t *j)
                     printf(",");
                 kv = kv->next;
             }
-            printf("}");
         }
     }
+    printf("}");
 }
 
 void insert(JSON_t *j, char *key, void *val, int val_type)
@@ -103,21 +103,24 @@ LIST_t *init_list(int val_type)
 
 void _print_list(LIST_t *l)
 {
+    printf("[");
     if (l != NULL)
     {
         if (l->head != NULL)
         {
             node_t *n = l->head;
-            printf("[");
+
             while (n != NULL)
             {
+                if (l->ltype == NULL_V)
+                    printf("NULL");
                 if (l->ltype == INT_V)
                     printf("%d", (int)n->d);
                 if (l->ltype == CHAR_V)
-                    printf("%s", (char *)n->d);
+                    printf("\"%s\"", (char *)n->d);
                 if (l->ltype == LIST_V)
                 {
-                    print_list((LIST_t *)n->d);
+                    _print_list((LIST_t *)n->d);
                 }
                 if (l->ltype == JSON_V)
                 {
@@ -127,9 +130,9 @@ void _print_list(LIST_t *l)
                     printf(",");
                 n = n->next;
             }
-            printf("]");
         }
     }
+    printf("]");
 }
 
 void print_list(LIST_t *l)
@@ -193,16 +196,16 @@ void print_KV(KV_t *kv)
 {
     if (kv != NULL)
     {
-        printf("%s:", kv->key);
+        printf("\"%s\":", kv->key);
         if (kv->v_type == NULL_V)
             printf("NULL");
         if (kv->v_type == INT_V)
             printf("%d", (int)kv->value);
         if (kv->v_type == CHAR_V)
-            printf("%s", (char *)kv->value);
+            printf("\"%s\"", (char *)kv->value);
         if (kv->v_type == LIST_V)
         {
-            print_list((LIST_t *)kv->value);
+            _print_list((LIST_t *)kv->value);
         }
         if (kv->v_type == JSON_V)
         {
@@ -211,13 +214,94 @@ void print_KV(KV_t *kv)
     }
 }
 
-JSON_t *parse()
+LIST_t *list_parse(FILE *fp)
+{
+    char c;
+    int typ;
+    c = fgetc(fp);
+    if (c == '[')
+    {
+        c = fgetc(fp);
+        while (c == ' ' || c == '\n' || c == '\t')
+            c = fgetc(fp);
+        if (c == ']')
+        {
+            return NULL;
+        }
+        switch (c)
+        {
+        case '"':
+            typ = CHAR_V;
+            break;
+        case '{':
+            typ = JSON_V;
+            break;
+        case '[':
+            typ = LIST_V;
+            break;
+        case ',':
+            typ = NULL_V;
+            break;
+        default:
+            typ = INT_V;
+            break;
+        }
+        ungetc(c, fp);
+        LIST_t *l = init_list(typ);
+        void *val = NULL;
+        while (c != EOF && c != ']')
+        {
+            c = fgetc(fp);
+            while (c == ' ' || c == '\n' || c == '\t')
+                c = fgetc(fp);
+            if (c == ',')
+                c = fgetc(fp);
+            if (c == ']')
+            {
+                break;
+            }
+            if (typ == JSON_V)
+            {
+                val = (JSON_t *)json_parse(fp);
+            }
+            else if (typ == LIST_V)
+            {
+                ungetc(c, fp);
+                val = list_parse(fp);
+                c = fgetc(fp);
+            }
+            else if (typ == CHAR_V)
+            {
+                val = (char *)malloc(sizeof(char) * STR_MAX);
+                c = fgetc(fp);
+                int i = 0;
+                while (c != '"')
+                {
+                    ((char *)val)[i++] = c;
+                    c = fgetc(fp);
+                }
+                c = fgetc(fp);
+                // printf(":%s:\n",(char*)val);
+            }
+            else if (typ == NULL_V)
+                val = NULL;
+            while (c == ' ' || c == '\n' || c == '\t')
+                c = fgetc(fp);
+            linsert(l, val);
+        }
+        return l;
+    }
+    return NULL;
+}
+
+JSON_t *json_parse(FILE *fp)
 {
     char c;
     int instr = 0;
     JSON_t *j = init_json();
-    while ((c = getchar()) != '\n')
+    while ((c = fgetc(fp)) != EOF)
     {
+        // printf("%c\n",c);
         if (c == '\n' || c == '\t' || (instr == 0 && c == ' '))
         {
             ;
@@ -234,66 +318,93 @@ JSON_t *parse()
         {
             break;
         }
-        else
+        else if (instr)
         {
-            char key[100];
+            char key[STR_MAX];
             void *val;
             int i = 0;
             int typ;
+            char tp;
             while (c != '"')
             {
                 key[i++] = c;
-                c = getchar();
+                c = fgetc(fp);
+                // printf("%c",c);
             }
             key[i] = '\0';
-            c = getchar(); //:
+            while (c != ':' && c != EOF)
+                c = fgetc(fp);
+            // printf("%c",c);
             if (c == ':')
             {
-                c = getchar(); //signifies type
-                if (c == ',')
+                c = fgetc(fp);
+                while (c == ' ' || c == '\n' || c == '\t')
+                    c = fgetc(fp);
+                tp = c;
+                // printf("typ=%c\n", tp);
+                if (tp == ',')
                 {
                     typ = NULL_V;
                     val = NULL;
                 }
-                else if (c <= '9' && c >= '0')
+                else if (tp <= '9' && tp >= '0')
                 {
                     typ = INT_V;
                     int num = c - '0';
-                    c = getchar();
+                    c = fgetc(fp);
                     while (c != ',' && c != '}')
                     {
+                        // printf("%c",c);
+                        if (c > '9' || c < '0')
+                        {
+                            printf("1.PARSE ERROR!!\n");
+                            free_json(j);
+                            return NULL;
+                        }
                         num = num * 10 + (c - '0');
-                        c = getchar();
+                        c = fgetc(fp);
                     }
                     val = (void *)num;
                 }
-                else if (c == '"')
+                else if (tp == '"')
                 {
                     typ = CHAR_V;
-                    val = (char *)malloc(sizeof(char) * 100);
-                    c = getchar();
+                    val = (char *)malloc(sizeof(char) * STR_MAX);
+                    c = fgetc(fp);
                     i = 0;
                     while (c != '"')
                     {
                         ((char *)val)[i++] = c;
-                        c = getchar();
+                        c = fgetc(fp);
                     }
                 }
-                else if (c == '[')
+                else if (tp == '[')
                 {
                     typ = LIST_V;
+                    ungetc('[', fp);
+                    val = list_parse(fp);
                 }
-                else if (c == '{')
+                else if (tp == '{')
                 {
                     typ = JSON_V;
-                    val = parse();
+                    ungetc('{', fp);
+                    val = json_parse(fp);
                 }
                 else
                 {
-                    break;
+                    printf("\n:%c: 2.PARSE ERROR!!\n", c);
+                    free_json(j);
+                    return NULL;
                 }
                 insert(j, key, val, typ);
             }
+            instr = 0;
+        }
+        else
+        {
+            printf("\n:%c: 3.PARSE ERROR!!\n", c);
+            free_json(j);
+            return NULL;
         }
     }
     return j;
