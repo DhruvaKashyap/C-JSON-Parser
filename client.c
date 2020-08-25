@@ -6,8 +6,9 @@ int main(int argc, char *argv[])
 	JSON_t *json;
 	FILE *fp = fopen("a.json", "r");
 	json = json_parse(fp);
-	// display(json);
-	ipynbtopy(json);
+	display_json(json);
+	// printf("\n\n\n");
+	// ipynbtopy(json);
 	free_json(json);
 	// LIST_t* l;
 	// l=list_parse(fp);

@@ -1,10 +1,7 @@
 #ifndef C_JSON
 #define C_JSON
-// #define NULL_V 0
-// #define INT_V 1
-// #define CHAR_V 2
-// #define LIST_V 3
-// #define JSON_V 4
+#include <stdio.h>
+
 typedef enum
 {
     NULL_V,
@@ -12,8 +9,13 @@ typedef enum
     CHAR_V,
     LIST_V,
     JSON_V
-}types;
-#include <stdio.h>
+} types;
+
+typedef enum
+{
+    MARKDOWN,
+    CODE,
+} cell_types;
 
 struct node
 {
@@ -59,25 +61,26 @@ typedef struct JSON JSON_t;
 node_t *cnode(void *val);
 void print_node(node_t *n, types a);
 
-KV_t *init_KV(char *key, void *value, int type);
+KV_t *init_KV(char *key, void *value, types type);
 void print_KV(KV_t *kv);
 void free_KV(KV_t *kv);
 
 JSON_t *init_json();
-void _display_JSON(JSON_t *j);
-void display(JSON_t *j);
-void insert(JSON_t *j, char *key, void *val, int val_type);
+void display_json(JSON_t *j);
+void insert(JSON_t *j, char *key, void *val, types val_type);
 KV_t *get(JSON_t *j, char *key);
-JSON_t *json_parse(FILE *fp);
 void free_json(JSON_t *j);
 
-LIST_t *init_list(int val_type);
+LIST_t *init_list(types val_type);
 void print_list(LIST_t *l);
-void _print_list(LIST_t *l);
 void linsert(LIST_t *l, void *val);
-LIST_t *list_parse(FILE *fp);
-void freelist(LIST_t *l);
+void free_list(LIST_t *l);
 
-void ipynbtopy(JSON_t* j);
+int int_parse(FILE *fp);
+char *str_parse(FILE *fp);
+LIST_t *list_parse(FILE *fp);
+JSON_t *json_parse(FILE *fp);
+
+void ipynbtopy(JSON_t *j);
 
 #endif

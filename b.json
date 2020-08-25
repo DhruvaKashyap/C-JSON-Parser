@@ -2,7 +2,16 @@
     "cells": [
         {
             "cell_type": "code",
-            "execution_count": null,
+            "collapsed": false,
+            "input": [
+                "%matplotlib inline\n",
+                "import numpy as np\n",
+                "import matplotlib.pyplot as plt"
+            ],
+            "language": "python",
+            "metadata": {},
+            "outputs": [],
+            "prompt_number": 1
         }
     ]
 }
