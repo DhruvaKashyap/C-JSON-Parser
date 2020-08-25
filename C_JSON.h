@@ -1,11 +1,18 @@
 #ifndef C_JSON
 #define C_JSON
-#define NULL_V 0
-#define INT_V 1
-#define CHAR_V 2
-#define LIST_V 3
-#define JSON_V 4
-
+// #define NULL_V 0
+// #define INT_V 1
+// #define CHAR_V 2
+// #define LIST_V 3
+// #define JSON_V 4
+typedef enum
+{
+    NULL_V,
+    INT_V,
+    CHAR_V,
+    LIST_V,
+    JSON_V
+}types;
 #include <stdio.h>
 
 struct node
@@ -50,6 +57,7 @@ typedef struct kv KV_t;
 typedef struct JSON JSON_t;
 
 node_t *cnode(void *val);
+void print_node(node_t *n, types a);
 
 KV_t *init_KV(char *key, void *value, int type);
 void print_KV(KV_t *kv);
@@ -69,5 +77,7 @@ void _print_list(LIST_t *l);
 void linsert(LIST_t *l, void *val);
 LIST_t *list_parse(FILE *fp);
 void freelist(LIST_t *l);
+
+void ipynbtopy(JSON_t* j);
 
 #endif

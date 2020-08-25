@@ -4,22 +4,23 @@
 int main(int argc, char *argv[])
 {
 	JSON_t *json;
-	FILE* fp=fopen("a.json","r");
+	FILE *fp = fopen("a.json", "r");
 	json = json_parse(fp);
-	display(json);
-// LIST_t* l;
-// l=list_parse(fp);
-printf("\n\n");
-
-// print_list(l);
-// int c=0;
-// node_t *n=l->head;
-// while(n!=NULL)
-// {
-// 	c++;
-// 	n=n->next;
-// }
-// printf("count:%d\n",c);
+	// display(json);
+	ipynbtopy(json);
+	free_json(json);
+	// LIST_t* l;
+	// l=list_parse(fp);
+	// printf("\n\n");
+	// print_list(l);
+	// int c=0;
+	// node_t *n=l->head;
+	// while(n!=NULL)
+	// {
+	// 	c++;
+	// 	n=n->next;
+	// }
+	// printf("count:%d\n",c);
 	// JSON_t *json2;
 	// json = init_json();
 	// json2 = init_json();
@@ -43,6 +44,5 @@ printf("\n\n");
 	// free_json(json);
 	// freelist(l);
 	// free_json(json2);
-
 	return 0;
 }

@@ -93,6 +93,25 @@ node_t *cnode(void *val)
     return n;
 }
 
+void print_node(node_t *n, types a)
+{
+    if (a == NULL_V)
+        printf("null");
+    if (a == INT_V)
+        printf("%d", (int)n->d);
+    if (a == CHAR_V)
+        printf("\"%s\"", (char *)n->d);
+    if (a == LIST_V)
+    {
+        _print_list((LIST_t *)n->d);
+    }
+    if (a == JSON_V)
+    {
+        _display_JSON((JSON_t *)n->d);
+    }
+    if (n->next != NULL)
+        printf(",");
+}
 LIST_t *init_list(int val_type)
 {
     LIST_t *l = malloc(sizeof(LIST_t));
@@ -112,22 +131,7 @@ void _print_list(LIST_t *l)
 
             while (n != NULL)
             {
-                if (l->ltype == NULL_V)
-                    printf("null");
-                if (l->ltype == INT_V)
-                    printf("%d", (int)n->d);
-                if (l->ltype == CHAR_V)
-                    printf("\"%s\"", (char *)n->d);
-                if (l->ltype == LIST_V)
-                {
-                    _print_list((LIST_t *)n->d);
-                }
-                if (l->ltype == JSON_V)
-                {
-                    _display_JSON((JSON_t *)n->d);
-                }
-                if (n->next != NULL)
-                    printf(",");
+                print_node(n, l->ltype);
                 n = n->next;
             }
         }
@@ -396,7 +400,7 @@ JSON_t *json_parse(FILE *fp)
                 {
                     if (c == 'n' && ((c = fgetc(fp)) == 'u') && ((c = fgetc(fp)) == 'l') && ((c = fgetc(fp)) == 'l'))
                     {
-                        typ=NULL_V;
+                        typ = NULL_V;
                         val = NULL;
                     }
                     else
@@ -418,4 +422,37 @@ JSON_t *json_parse(FILE *fp)
         }
     }
     return j;
+}
+
+typedef enum{
+    MARKDOWN,
+    CODE,
+}cell_types;
+
+void ipynbtopy(JSON_t *j)
+{
+    KV_t *cells = get(j, "cells");
+    // print_KV(n);
+    // printf("\n");
+    LIST_t *l = cells->value;
+    // print_list(l);
+    // printf("\n");
+    node_t *n = l->head;
+    KV_t *ctype;
+    KV_t *source;
+    while (n != NULL)
+    {
+        // print_node(n,l->ltype);
+        // printf("\n\n\n\n%d\n",l->ltype);
+        // display((JSON_t*)n->d);
+        ctype = get((JSON_t*)n->d, "cell_type");
+        // print_KV(ctype);
+        // printf("%s\n",(char*)ctype->value);
+        if(strcmp((char*)ctype->value,"markdown")==0)
+            printf("#\n");
+        source=get((JSON_t*)n->d, "source");
+        LIST_t *ln=(LIST_t*)source->value;
+        print_list(ln);
+        n = n->next;
+    }
 }
