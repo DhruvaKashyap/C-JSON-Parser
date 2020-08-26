@@ -18,7 +18,6 @@ void free_json(JSON_t *j)
     if (j != NULL)
     {
         n = j->head;
-        t;
         while (n != NULL)
         {
             t = n->next;
@@ -30,7 +29,7 @@ void free_json(JSON_t *j)
     j = NULL;
 }
 
-KV_t *init_KV(char *key, void *value, types type)
+KV_t *init_KV(const char *key, void *value, const types type)
 {
     KV_t *kv;
     kv = (KV_t *)malloc(sizeof(KV_t));
@@ -45,12 +44,51 @@ KV_t *init_KV(char *key, void *value, types type)
 void free_KV(KV_t *kv)
 {
     if (kv != NULL)
+    {
         free(kv->key);
+        switch (kv->v_type)
+        {
+        case CHAR_V:
+            free(kv->value);
+            break;
+        case LIST_V:
+            free_list(kv->value);
+            break;
+        case JSON_V:
+            free_json(kv->value);
+            break;
+        default:
+            break;
+        }
+    }
     free(kv);
     kv = NULL;
 }
 
-void display_json(JSON_t *j)
+void free_node(node_t *n, types t)
+{
+    if (n != NULL)
+    {
+        switch (t)
+        {
+        case CHAR_V:
+            free(n->d);
+            break;
+        case LIST_V:
+            free_list(n->d);
+            break;
+        case JSON_V:
+            free_json(n->d);
+            break;
+        default:
+            break;
+        }
+    }
+    free(n);
+    n = NULL;
+}
+
+void display_json(const JSON_t *j)
 {
     KV_t *kv;
     printf("{");
@@ -71,7 +109,7 @@ void display_json(JSON_t *j)
     printf("}");
 }
 
-void insert(JSON_t *j, char *key, void *val, types val_type)
+void insert(JSON_t *j, const char *key, void *val, const types val_type)
 {
     KV_t *n;
     if (j != NULL)
@@ -96,7 +134,7 @@ node_t *cnode(void *val)
     return n;
 }
 
-void print_node(node_t *n, types a)
+void print_node(const node_t *n, const types a)
 {
     if (n != NULL)
     {
@@ -120,7 +158,7 @@ void print_node(node_t *n, types a)
         default:
             break;
         }
-        if(n->next!=NULL)
+        if (n->next != NULL)
             printf(",");
     }
 }
@@ -134,7 +172,7 @@ LIST_t *init_list(types val_type)
     return l;
 }
 
-void print_list(LIST_t *l)
+void print_list(const LIST_t *l)
 {
     node_t *n;
     printf("[");
@@ -179,7 +217,7 @@ void free_list(LIST_t *l)
         while (n != NULL)
         {
             t = n->next;
-            free(n);
+            free_node(n, l->ltype);
             n = t;
         }
     }
@@ -187,7 +225,7 @@ void free_list(LIST_t *l)
     l = NULL;
 }
 
-KV_t *get(JSON_t *j, char *key)
+KV_t *get(const JSON_t *j, const char *key)
 {
     KV_t *n;
     if (j != NULL)
@@ -200,7 +238,7 @@ KV_t *get(JSON_t *j, char *key)
     return NULL;
 }
 
-void print_KV(KV_t *kv)
+void print_KV(const KV_t *kv)
 {
     if (kv != NULL)
     {
@@ -368,7 +406,7 @@ LIST_t *list_parse(FILE *fp)
 JSON_t *json_parse(FILE *fp)
 {
     char c;
-    JSON_t *j = init_json();
+    JSON_t *j;
     int num_lines = 0;
     char key[STR_MAX];
     void *val;
@@ -380,9 +418,9 @@ JSON_t *json_parse(FILE *fp)
     if (c == EOF)
     {
         printf("0.PARSE ERROR. Blank file\n");
-        free_json(j);
         return NULL;
     }
+    j = init_json();
     if (c == '{')
     {
         while (c != EOF && (c == '{' || c == ',' || c == '\n') && c != '}')
@@ -459,25 +497,25 @@ JSON_t *json_parse(FILE *fp)
                     {
                         if (tp == 'f')
                         {
-                            c = fgetc(fp);      //f
-                            c = fgetc(fp);      //a
-                            c = fgetc(fp);      //l
-                            c = fgetc(fp);      //s
-                            c = fgetc(fp);      //e
+                            c = fgetc(fp); //f
+                            c = fgetc(fp); //a
+                            c = fgetc(fp); //l
+                            c = fgetc(fp); //s
+                            c = fgetc(fp); //e
                         }
                         else if (tp == 'n')
                         {
-                            c = fgetc(fp);      //n
-                            c = fgetc(fp);      //u
-                            c = fgetc(fp);      //l
-                            c = fgetc(fp);      //l
+                            c = fgetc(fp); //n
+                            c = fgetc(fp); //u
+                            c = fgetc(fp); //l
+                            c = fgetc(fp); //l
                         }
                         else if (tp == 't')
                         {
-                            c = fgetc(fp);      //t
-                            c = fgetc(fp);      //r
-                            c = fgetc(fp);      //u
-                            c = fgetc(fp);      //e
+                            c = fgetc(fp); //t
+                            c = fgetc(fp); //r
+                            c = fgetc(fp); //u
+                            c = fgetc(fp); //e
                         }
                         typ = NULL_V;
                         val = NULL;
@@ -501,6 +539,7 @@ JSON_t *json_parse(FILE *fp)
                 else
                 {
                     printf("3.PARSE ERROR. No : after key on line:%d got %c\n", num_lines, c);
+                    free_json(j);
                     return NULL;
                 }
             }
@@ -519,6 +558,7 @@ JSON_t *json_parse(FILE *fp)
     else
     {
         printf("1.PARSE ERROR. Not a JSON. Line :%d got %c\n", num_lines, c);
+        free_json(j);
         return NULL;
     }
     return j;

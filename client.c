@@ -9,5 +9,6 @@ int main(int argc, char *argv[])
 	display_json(json);
 	printf("\n");
 	free_json(json);
+	fclose(fp);
 	return 0;
 }
