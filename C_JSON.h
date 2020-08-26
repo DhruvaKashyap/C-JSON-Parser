@@ -11,12 +11,6 @@ typedef enum
     JSON_V
 } types;
 
-typedef enum
-{
-    MARKDOWN,
-    CODE,
-} cell_types;
-
 struct node
 {
     void *d;
@@ -29,14 +23,6 @@ struct list
     struct node *tail;
     int ltype;
 };
-
-// union vals
-// {
-//     int num;
-//     char *str;
-//     struct list *lhead;
-//     struct JSON *jhead;
-// };
 
 struct kv
 {
@@ -54,7 +40,6 @@ struct JSON
 
 typedef struct node node_t;
 typedef struct list LIST_t;
-typedef union vals VAL_t;
 typedef struct kv KV_t;
 typedef struct JSON JSON_t;
 
@@ -80,7 +65,5 @@ int int_parse(FILE *fp);
 char *str_parse(FILE *fp);
 LIST_t *list_parse(FILE *fp);
 JSON_t *json_parse(FILE *fp);
-
-void ipynbtopy(JSON_t *j);
 
 #endif
