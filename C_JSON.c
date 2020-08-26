@@ -248,9 +248,8 @@ char *str_parse(FILE *fp)
         return NULL;
     // printf("1\n");
     val = (char *)malloc(sizeof(char) * STR_MAX);
-    while (c != EOF && c != '"')
+    while (c != EOF && (c != '"'))
     {
-        // printf("%c\n", c);
         if (esc == 1)
         {
             if (c == 'n')
@@ -264,7 +263,11 @@ char *str_parse(FILE *fp)
         else
             val[i++] = c;
         c = fgetc(fp);
-        // printf("%c\n", c);
+        if (esc && c == '"')
+        {
+            val[i++] = '\"';
+            c = fgetc(fp);
+        }
     }
     // printf("2\n");
     val[i] = '\0';
@@ -288,13 +291,12 @@ LIST_t *list_parse(FILE *fp)
             ;
         if (c == EOF)
         {
-            printf("list end\n");
+            // printf("list end\n");
             return NULL;
         }
         if (c == ']')
         {
-            printf("empty list\n");
-            return NULL;
+            return init_list(NULL_V);
         }
         switch (c)
         {
@@ -334,8 +336,6 @@ LIST_t *list_parse(FILE *fp)
             else if (typ == CHAR_V)
             {
                 val = (char *)str_parse(fp);
-                // printf("%s\n", (char *)val);
-                // printf("%s\n",(char*)val);
             }
             else if (typ == INT_V)
                 val = (int)int_parse(fp);
@@ -350,7 +350,6 @@ LIST_t *list_parse(FILE *fp)
                 return NULL;
             }
             linsert(l, val);
-            // printf(":%c:\n", c);
             if (c != ']')
             {
                 while (c != ']' && (c = fgetc(fp)) != EOF && (c == '\n' || c == '\t' || c == ' '))
@@ -358,8 +357,6 @@ LIST_t *list_parse(FILE *fp)
                 ungetc(c, fp);
             }
         }
-        if (l->head == NULL)
-            return NULL;
         return l;
     }
     return NULL;
@@ -432,86 +429,40 @@ JSON_t *json_parse(FILE *fp)
                         int num = int_parse(fp);
                         if (num == -1)
                         {
-                            printf("7.PARSE ERROR. Number read error for key %s on line:%d\n", key, num_lines);
+                            printf("7.PARSE ERROR.");
+                            printf(" int ");
+                            printf("read error for key %s on line:%d\n", key, num_lines);
                             free_json(j);
                             return NULL;
                         }
-                        val = (void *)num;
-                        while ((c = fgetc(fp)) != EOF && (c == '\n' || c == '\t' || c == ' '))
-                            num_lines += c == '\n';
-                        if (c != ',' && c != '}' && c != '\n')
+                        else
                         {
-                            printf("8.PARSE ERROR. Incomplete JSON file(No , for key %s):%d got %c\n", key, num_lines, c);
-                            free_json(j);
-                            return NULL;
+                            val = (int)num;
                         }
                     }
                     else if (tp == '"')
                     {
                         typ = CHAR_V;
-                        char *str = str_parse(fp);
-                        if (str == NULL)
-                        {
-                            printf("7.PARSE ERROR. String read error for key %s on line:%d\n", key, num_lines);
-                            free_json(j);
-                            return NULL;
-                        }
-                        val = (void *)str;
-                        while ((c = fgetc(fp)) != EOF && (c == '\n' || c == '\t' || c == ' '))
-                            num_lines += c == '\n';
-                        if (c != ',' && c != '}' && c != '\n')
-                        {
-                            printf("8.PARSE ERROR. Incomplete JSON file(No , for key %s):%d got %c\n", key, num_lines, c);
-                            free_json(j);
-                            return NULL;
-                        }
+                        val = (void *)str_parse(fp);
+                        ;
                     }
                     else if (tp == '[')
                     {
                         typ = LIST_V;
-                        LIST_t *l = list_parse(fp);
-                        // print_list(l);
-                        // printf("-------------\n");
-                        // if (l == NULL)
-                        // {
-                        //     printf("7.PARSE ERROR. List read error for key %s on line:%d\n", key, num_lines);
-                        //     free_json(j);
-                        //     return NULL;
-                        // }
-                        val = (void *)l;
-                        while ((c = fgetc(fp)) != EOF && (c == '\n' || c == '\t' || c == ' '))
-                            num_lines += c == '\n';
-                        if (c != ',' && c != '}' && c != '\n')
-                        {
-                            printf("8.PARSE ERROR. Incomplete JSON file(No , for key %s):%d got %c\n", key, num_lines, c);
-                            free_json(j);
-                            return NULL;
-                        }
+                        val = (void *)list_parse(fp);
+                        ;
                     }
                     else if (tp == '{')
                     {
                         typ = JSON_V;
-                        JSON_t *jj = json_parse(fp);
-                        // if (jj == NULL)
-                        // {
-                        //     printf("7.PARSE ERROR. JSON read error for key %s on line:%d got %c\n", key, num_lines,c);
-                        //     free_json(j);
-                        //     return NULL;
-                        // }
-                        val = (void *)jj;
-                        while ((c = fgetc(fp)) != EOF && (c == '\n' || c == '\t' || c == ' '))
-                            num_lines += c == '\n';
-                        if (c != ',' && c != '}' && c != '\n')
-                        {
-                            printf("8.PARSE ERROR. Incomplete JSON file(No , for key %s):%d got %c\n", key, num_lines, c);
-                            free_json(j);
-                            return NULL;
-                        }
+                        val = (void *)json_parse(fp);
+                        ;
                     }
                     else
                     {
                         if (tp == 'f')
                         {
+                            c = fgetc(fp);
                             c = fgetc(fp);
                             c = fgetc(fp);
                             c = fgetc(fp);
@@ -522,9 +473,26 @@ JSON_t *json_parse(FILE *fp)
                             c = fgetc(fp);
                             c = fgetc(fp);
                             c = fgetc(fp);
+                            c = fgetc(fp);
                         }
                         typ = NULL_V;
                         val = NULL;
+                    }
+                    if (((typ != NULL_V && typ != INT_V) && val == NULL))
+                    {
+                        printf("7.PARSE ERROR.");
+                        printf("type");
+                        printf("read error for key %s on line:%d\n", key, num_lines);
+                        free_json(j);
+                        return NULL;
+                    }
+                    while ((c = fgetc(fp)) != EOF && (c == '\n' || c == '\t' || c == ' '))
+                        num_lines += c == '\n';
+                    if (c != ',' && c != '}' && c != '\n')
+                    {
+                        printf("8.PARSE ERROR. Incomplete JSON file(No , for key %s):%d got %c\n", key, num_lines, c);
+                        free_json(j);
+                        return NULL;
                     }
                     insert(j, key, val, typ);
                 }
@@ -536,8 +504,6 @@ JSON_t *json_parse(FILE *fp)
             }
             else if (c == '}')
             {
-                if (j->head == NULL)
-                    return NULL;
                 return j;
             }
             else
@@ -548,11 +514,7 @@ JSON_t *json_parse(FILE *fp)
             }
         }
         if (c == '}')
-        {
-            if (j->head == NULL)
-                return NULL;
             return j;
-        }
     }
     else
     {

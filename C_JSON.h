@@ -30,13 +30,13 @@ struct list
     int ltype;
 };
 
-union vals
-{
-    int num;
-    char *str;
-    struct list *lhead;
-    struct JSON *jhead;
-};
+// union vals
+// {
+//     int num;
+//     char *str;
+//     struct list *lhead;
+//     struct JSON *jhead;
+// };
 
 struct kv
 {
