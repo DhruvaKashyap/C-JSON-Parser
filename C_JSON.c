@@ -327,7 +327,7 @@ char *str_parse(FILE *fp)
     else
         return NULL;
     val = (char *)malloc(sizeof(char) * (STR_MAX + 1));
-    while (i < STR_MAX && c != EOF && (esc || c != '"'))
+    while (c != EOF && (esc || c != '"'))
     {
         if (esc == 1)
         {
@@ -341,7 +341,7 @@ char *str_parse(FILE *fp)
         }
         if (c == '\\')
             esc = 1;
-        else
+        else if (i < STR_MAX)
             val[i++] = c;
         c = fgetc(fp);
     }
@@ -439,6 +439,7 @@ JSON_t *json_parse(FILE *fp)
     int i = 0;
     types typ;
     char tp;
+    int esc = 0;
     while ((c = fgetc(fp)) != EOF && (c == '\n' || c == '\t' || c == ' '))
         num_lines += c == '\n';
     if (c == EOF)
@@ -457,14 +458,43 @@ JSON_t *json_parse(FILE *fp)
             {
                 i = 0;
                 c = fgetc(fp);
-                while (i < STR_MAX && c != EOF && c != '"')
+                while (c != EOF && c != '"')
                 {
-                    key[i++] = c;
+                    if (esc == 1)
+                    {
+                        if (c == 'n')
+                            c = '\n';
+                        else if (c == 't')
+                            c = '\t';
+                        else if (c == '"')
+                            c = '\"';
+                        esc = 0;
+                    }
+                    if (c == '\\')
+                        esc = 1;
+                    else if (i < STR_MAX)
+                        key[i++] = c;
                     c = fgetc(fp);
                 }
                 if (i == STR_MAX)
                 {
                     printf("WARNING .Key size too large on line %d. Truncating string to %d characters.\n", num_lines, STR_MAX);
+                    while (c != EOF && (esc || c != '"'))
+                    {
+                        if (esc == 1)
+                        {
+                            if (c == 'n')
+                                c = '\n';
+                            else if (c == 't')
+                                c = '\t';
+                            else if (c == '"')
+                                c = '\"';
+                            esc = 0;
+                        }
+                        if (c == '\\')
+                            esc = 1;
+                        c = fgetc(fp);
+                    }
                 }
                 key[i] = '\0';
                 if (c == EOF)
