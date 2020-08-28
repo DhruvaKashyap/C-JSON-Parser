@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 //Maximum legth of a string
-#define STR_MAX 1000000
+#define STR_MAX 1000
 
 //creates a node with a value
 node_t *cnode(void *val)
@@ -326,8 +326,8 @@ char *str_parse(FILE *fp)
         c = fgetc(fp);
     else
         return NULL;
-    val = (char *)malloc(sizeof(char) * STR_MAX);
-    while (c != EOF && (esc || c != '"'))
+    val = (char *)malloc(sizeof(char) * (STR_MAX + 1));
+    while (i < STR_MAX && c != EOF && (esc || c != '"'))
     {
         if (esc == 1)
         {
@@ -344,6 +344,10 @@ char *str_parse(FILE *fp)
         else
             val[i++] = c;
         c = fgetc(fp);
+    }
+    if (i == STR_MAX)
+    {
+        printf("WARNING .String size too large. Truncating string to %d characters.\n", STR_MAX);
     }
     val[i] = '\0';
     if (c == EOF)
@@ -430,7 +434,7 @@ JSON_t *json_parse(FILE *fp)
     char c;
     JSON_t *j;
     int num_lines = 0;
-    char key[STR_MAX];
+    char key[STR_MAX + 1];
     void *val;
     int i = 0;
     types typ;
@@ -453,10 +457,14 @@ JSON_t *json_parse(FILE *fp)
             {
                 i = 0;
                 c = fgetc(fp);
-                while (c != EOF && c != '"')
+                while (i < STR_MAX && c != EOF && c != '"')
                 {
                     key[i++] = c;
                     c = fgetc(fp);
+                }
+                if (i == STR_MAX)
+                {
+                    printf("WARNING .Key size too large on line %d. Truncating string to %d characters.\n", num_lines, STR_MAX);
                 }
                 key[i] = '\0';
                 if (c == EOF)
