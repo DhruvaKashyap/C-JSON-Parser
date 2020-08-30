@@ -295,7 +295,7 @@ int *int_parse(FILE *fp)
     num = (int *)malloc(sizeof(int));
     *num = c - '0';
     c = fgetc(fp);
-    while (c != EOF && c != ',' && c != '}' && c != '\n' && c != ' ')
+    while (c != EOF && c != ',' && c != '}' && c != ']' && c != '\n' && c != ' ')
     {
         if (c > '9' || c < '0')
         {
@@ -307,7 +307,7 @@ int *int_parse(FILE *fp)
     }
     if (c == EOF)
         return NULL;
-    if (c == ',' || c == '}')
+    if (c == ',' || c == '}' || c == ']')
         ungetc(c, fp);
     return num;
 }
