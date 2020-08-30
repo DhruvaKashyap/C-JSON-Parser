@@ -24,7 +24,7 @@ struct kv
 {
     char *key;
     void *value;
-    int v_type;
+    types v_type;
     struct kv *next;
 };
 
@@ -33,7 +33,7 @@ struct list
 {
     struct node *head;
     struct node *tail;
-    int ltype;
+    types ltype;
 };
 
 //JSON structure
