@@ -4,6 +4,14 @@
 //Maximum legth of a string
 #define STR_MAX 1000
 
+char *copy_alloc(const char *s)
+{
+    char *str;
+    str = (char *)malloc(sizeof(char) * (1 + strlen(s)));
+    strcpy(str, s);
+    return str;
+}
+
 //creates a node with a value
 node_t *cnode(void *val)
 {
@@ -74,8 +82,7 @@ KV_t *init_KV(const char *key, void *value, const types type)
 {
     KV_t *kv;
     kv = (KV_t *)malloc(sizeof(KV_t));
-    kv->key = (char *)malloc(sizeof(char) * (strlen(key) + 1));
-    strcpy(kv->key, key);
+    kv->key = copy_alloc(key);
     kv->value = value;
     kv->v_type = type;
     kv->next = NULL;
@@ -315,7 +322,8 @@ int *int_parse(FILE *fp)
 //Parser for a string
 char *str_parse(FILE *fp)
 {
-    char *val;
+    char val[STR_MAX];
+    char *str;
     char c;
     int i;
     int esc;
@@ -326,7 +334,6 @@ char *str_parse(FILE *fp)
         c = fgetc(fp);
     else
         return NULL;
-    val = (char *)malloc(sizeof(char) * (STR_MAX + 1));
     while (c != EOF && (esc || c != '"'))
     {
         if (esc == 1)
@@ -355,7 +362,8 @@ char *str_parse(FILE *fp)
         free(val);
         return NULL;
     }
-    return val;
+    str = copy_alloc(val);
+    return str;
 }
 
 //Parser for a list
