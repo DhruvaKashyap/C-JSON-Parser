@@ -358,10 +358,7 @@ char *str_parse(FILE *fp)
     }
     val[i] = '\0';
     if (c == EOF)
-    {
-        free(val);
         return NULL;
-    }
     str = copy_alloc(val);
     return str;
 }
