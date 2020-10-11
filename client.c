@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
 	if (fp)
 	{
 		json = json_parse(fp);
-		display_json(json);
+		// display_json(json);
 		printf("\n");
 		free_json(json);
 		fclose(fp);
